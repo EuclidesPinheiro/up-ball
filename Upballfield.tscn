@@ -1,14 +1,14 @@
-[gd_scene load_steps=8 format=3 uid="uid://buj0kvsagpgyg"]
+[gd_scene load_steps=10 format=3 uid="uid://buj0kvsagpgyg"]
 
 [ext_resource type="Script" path="res://Scripts/Upballfield.cs" id="1_upballfield"]
 [ext_resource type="PackedScene" uid="uid://dball001" path="res://Scenes/Entities/Ball.tscn" id="2_ball"]
 [ext_resource type="PackedScene" uid="uid://dramp001" path="res://Scenes/Entities/Ramp.tscn" id="3_ramp"]
 [ext_resource type="Script" path="res://Scripts/Entities/ObstacleSpawner.cs" id="4_spawner"]
 [ext_resource type="PackedScene" uid="uid://dblackhole001" path="res://Scenes/Entities/BlackHole.tscn" id="5_blackhole"]
-[ext_resource type="PackedScene" uid="uid://cpjqs32miw0rk" path="res://Scenes/Entities/YellowHole.tscn" id="6_yellowhole"]
+[ext_resource type="PackedScene" uid="uid://dyellowhole001" path="res://Scenes/Entities/YellowHole.tscn" id="6_yellowhole"]
 [ext_resource type="PackedScene" uid="uid://dhud001" path="res://Scenes/UI/HUD.tscn" id="7_hud"]
 [ext_resource type="PackedScene" uid="uid://dgameover001" path="res://Scenes/UI/GameOverUI.tscn" id="8_gameover"]
-[ext_resource type="PackedScene" uid="uid://dgameover001" path="res://Scenes/UI/GameOverUI.tscn" id="9_victory"]
+[ext_resource type="PackedScene" uid="uid://dvictory001" path="res://Scenes/UI/VictoryUI.tscn" id="9_victory"]
 
 [node name="Upballfield" type="Node2D"]
 script = ExtResource("1_upballfield")

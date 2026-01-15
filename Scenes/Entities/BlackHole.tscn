@@ -11,19 +11,13 @@ collision_mask = 2
 script = ExtResource("1_blackhole")
 Speed = 150.0
 
-[node name="Sprite2D" type="ColorRect" parent="."]
-offset_left = -40.0
-offset_top = -40.0
-offset_right = 40.0
-offset_bottom = 40.0
-color = Color(0.1, 0.1, 0.1, 1)
+[node name="OuterRing" type="Polygon2D" parent="."]
+color = Color(0.15, 0.15, 0.15, 1)
+polygon = PackedVector2Array(-40, 0, -39, -12, -35, -23, -28, -32, -19, -38, -8, -40, 8, -40, 19, -38, 28, -32, 35, -23, 39, -12, 40, 0, 39, 12, 35, 23, 28, 32, 19, 38, 8, 40, -8, 40, -19, 38, -28, 32, -35, 23, -39, 12)
 
-[node name="InnerCircle" type="ColorRect" parent="."]
-offset_left = -30.0
-offset_top = -30.0
-offset_right = 30.0
-offset_bottom = 30.0
+[node name="InnerCircle" type="Polygon2D" parent="."]
 color = Color(0, 0, 0, 1)
+polygon = PackedVector2Array(-30, 0, -29, -9, -26, -17, -21, -24, -14, -28, -6, -30, 6, -30, 14, -28, 21, -24, 26, -17, 29, -9, 30, 0, 29, 9, 26, 17, 21, 24, 14, 28, 6, 30, -6, 30, -14, 28, -21, 24, -26, 17, -29, 9)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_blackhole")

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dmainmenu001"]
 
 [ext_resource type="Script" uid="uid://bdsmjxx2ouw60" path="res://Scripts/UI/MainMenu.cs" id="1_mainmenu"]
-[ext_resource type="Texture2D" uid="uid://logo001" path="res://Images/UpBall!Logo.png" id="2_logo"]
+[ext_resource type="Texture2D" uid="uid://bo6tjww5cao2k" path="res://Images/UpBall!Logo.png" id="2_logo"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3

@@ -9,12 +9,12 @@ namespace UpBall.UI;
 /// </summary>
 public partial class MainMenu : Control
 {
-    private Button _playButton;
+    private TextureButton _playButton;
     private Label _highScoreLabel;
 
     public override void _Ready()
     {
-        _playButton = GetNode<Button>("VBoxContainer/PlayButton");
+        _playButton = GetNode<TextureButton>("VBoxContainer/PlayButton");
         _highScoreLabel = GetNode<Label>("VBoxContainer/HighScoreLabel");
 
         _playButton.Pressed += OnPlayPressed;

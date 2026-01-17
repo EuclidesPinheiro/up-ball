@@ -141,7 +141,7 @@ public partial class MainMenu : Control
     {
         if (GameManager.Instance != null)
         {
-            _highScoreLabel.Text = $"Best Level: {GameManager.Instance.HighScore}";
+            _highScoreLabel.Text = $"Best Level: {GameManager.Instance.HighestUnlockedLevel}";
         }
     }
 
@@ -151,7 +151,7 @@ public partial class MainMenu : Control
         StopIdleAnimation();
         _pressTween?.Kill();
 
-        GetTree().ChangeSceneToFile("res://Upballfield.tscn");
-        GameManager.Instance?.StartGame();
+        // Go to level select menu instead of directly starting game
+        GameManager.Instance?.GoToLevelSelect();
     }
 }

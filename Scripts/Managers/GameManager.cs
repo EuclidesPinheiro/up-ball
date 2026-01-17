@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+using UpBall.Data;
 
 namespace UpBall.Managers;
 
@@ -14,6 +16,7 @@ public partial class GameManager : Node
     public enum GameState
     {
         Menu,
+        LevelSelect,
         Playing,
         Paused,
         GameOver,
@@ -34,7 +37,16 @@ public partial class GameManager : Node
 
     // Level and Score
     public int CurrentLevel { get; private set; } = 1;
-    public int HighScore { get; private set; } = 0;
+    public int HighestUnlockedLevel { get; private set; } = 1;
+    public const int TotalLevels = 12;
+
+    // Level Data - stores progress for each level
+    private Dictionary<int, LevelData> _levelDataDict = new Dictionary<int, LevelData>();
+
+    // Current level star tracking
+    public int StarsCollectedInLevel { get; private set; } = 0;
+    public int TotalStarsInLevel { get; private set; } = 0;
+    public int StarsPerLevel => 3 + CurrentLevel; // Number of star collectibles per level
 
     // Difficulty settings per level
     public float ObstacleSpeed => 100f + (CurrentLevel * 20f);
@@ -45,31 +57,67 @@ public partial class GameManager : Node
     [Signal] public delegate void StateChangedEventHandler(int newState);
     [Signal] public delegate void LevelChangedEventHandler(int level);
     [Signal] public delegate void GameOverEventHandler();
-    [Signal] public delegate void VictoryEventHandler();
+    [Signal] public delegate void VictoryEventHandler(int starsEarned);
+    [Signal] public delegate void StarCollectedEventHandler(int collected, int total);
 
     public override void _Ready()
     {
         Instance = this;
-        LoadHighScore();
+        InitializeLevelData();
+        LoadProgress();
     }
 
-    public void StartGame()
+    private void InitializeLevelData()
     {
-        CurrentLevel = 1;
+        for (int i = 1; i <= TotalLevels; i++)
+        {
+            _levelDataDict[i] = new LevelData(i, i == 1); // Level 1 starts unlocked
+        }
+    }
+
+    public LevelData GetLevelData(int level)
+    {
+        if (_levelDataDict.ContainsKey(level))
+            return _levelDataDict[level];
+        return null;
+    }
+
+    public void StartLevel(int level)
+    {
+        if (level < 1 || level > TotalLevels) return;
+        if (!_levelDataDict[level].IsUnlocked) return;
+
+        CurrentLevel = level;
+        StarsCollectedInLevel = 0;
+        TotalStarsInLevel = StarsPerLevel;
         CurrentState = GameState.Playing;
+        
+        GetTree().ChangeSceneToFile("res://Upballfield.tscn");
         EmitSignal(SignalName.LevelChanged, CurrentLevel);
+    }
+
+    public void CollectStar()
+    {
+        StarsCollectedInLevel++;
+        EmitSignal(SignalName.StarCollected, StarsCollectedInLevel, TotalStarsInLevel);
     }
 
     public void RestartLevel()
     {
+        StarsCollectedInLevel = 0;
         CurrentState = GameState.Playing;
     }
 
     public void NextLevel()
     {
-        CurrentLevel++;
-        CurrentState = GameState.Playing;
-        EmitSignal(SignalName.LevelChanged, CurrentLevel);
+        if (CurrentLevel < TotalLevels)
+        {
+            StartLevel(CurrentLevel + 1);
+        }
+        else
+        {
+            GoToLevelSelect();
+        }
     }
 
     public void TriggerGameOver()
@@ -80,13 +128,31 @@ public partial class GameManager : Node
 
     public void TriggerVictory()
     {
-        if (CurrentLevel > HighScore)
+        // Calculate star rating based on collection percentage
+        float percentage = TotalStarsInLevel > 0 ? (float)StarsCollectedInLevel / TotalStarsInLevel : 0f;
+        int starsEarned = LevelData.CalculateStarRating(percentage);
+
+        // Update level data if this is a better result
+        var levelData = _levelDataDict[CurrentLevel];
+        if (starsEarned > levelData.StarsEarned)
         {
-            HighScore = CurrentLevel;
-            SaveHighScore();
+            levelData.StarsEarned = starsEarned;
+            levelData.BestPercentage = percentage;
         }
+
+        // Unlock next level
+        if (CurrentLevel < TotalLevels && !_levelDataDict[CurrentLevel + 1].IsUnlocked)
+        {
+            _levelDataDict[CurrentLevel + 1].IsUnlocked = true;
+            if (CurrentLevel + 1 > HighestUnlockedLevel)
+            {
+                HighestUnlockedLevel = CurrentLevel + 1;
+            }
+        }
+
+        SaveProgress();
         CurrentState = GameState.Victory;
-        EmitSignal(SignalName.Victory);
+        EmitSignal(SignalName.Victory, starsEarned);
     }
 
     public void PauseGame()
@@ -113,18 +179,50 @@ public partial class GameManager : Node
         GetTree().ChangeSceneToFile("res://Scenes/UI/MainMenu.tscn");
     }
 
-    private void LoadHighScore()
+    public void GoToLevelSelect()
     {
-        if (FileAccess.FileExists("user://highscore.save"))
+        CurrentState = GameState.LevelSelect;
+        GetTree().ChangeSceneToFile("res://Scenes/UI/LevelSelectMenu.tscn");
+    }
+
+    private void LoadProgress()
+    {
+        if (!FileAccess.FileExists("user://progress.save")) return;
+
+        using var file = FileAccess.Open("user://progress.save", FileAccess.ModeFlags.Read);
+        
+        HighestUnlockedLevel = (int)file.Get32();
+        
+        for (int i = 1; i <= TotalLevels; i++)
         {
-            using var file = FileAccess.Open("user://highscore.save", FileAccess.ModeFlags.Read);
-            HighScore = (int)file.Get32();
+            bool unlocked = file.Get8() == 1;
+            int stars = (int)file.Get8();
+            float percentage = file.GetFloat();
+
+            _levelDataDict[i].IsUnlocked = unlocked;
+            _levelDataDict[i].StarsEarned = stars;
+            _levelDataDict[i].BestPercentage = percentage;
         }
     }
 
-    private void SaveHighScore()
+    private void SaveProgress()
     {
-        using var file = FileAccess.Open("user://highscore.save", FileAccess.ModeFlags.Write);
-        file.Store32((uint)HighScore);
+        using var file = FileAccess.Open("user://progress.save", FileAccess.ModeFlags.Write);
+        
+        file.Store32((uint)HighestUnlockedLevel);
+        
+        for (int i = 1; i <= TotalLevels; i++)
+        {
+            var data = _levelDataDict[i];
+            file.Store8((byte)(data.IsUnlocked ? 1 : 0));
+            file.Store8((byte)data.StarsEarned);
+            file.StoreFloat(data.BestPercentage);
+        }
+    }
+
+    // Legacy compatibility
+    public void StartGame()
+    {
+        StartLevel(1);
     }
 }

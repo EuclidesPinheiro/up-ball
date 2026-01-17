@@ -88,10 +88,10 @@ public partial class Upballfield : Node2D
         _gameOverUI.Visible = true;
     }
 
-    private void OnVictory()
+    private void OnVictory(int starsEarned)
     {
         AudioManager.Instance?.PlayVictory();
-        _victoryUI.Visible = true;
+        // VictoryUI now handles its own visibility via Victory signal
     }
 
     private void OnGameStateChanged(int state)
